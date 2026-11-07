@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fast Trans – Serwis</title>
+<meta name="theme-color" content="#2b2b2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Serwis FT">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root { --bg:#f0f0f0; --card:#fff; --ink:#2b2b2b; --mute:#6b7280; --line:#e3e5e8;
+          --red:#d93025; --redbg:#fde8e6; --yel:#e8a200; --yelbg:#fff6dc; --ok:#1e8e3e; --okbg:#e6f4ea;
+          --accent:#e3002c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:16px; }
+  header { background:linear-gradient(#f7f7f7,#cfcfcf); border-bottom:4px solid #e3002c; padding:12px 16px 0; position:sticky; top:0; z-index:5; text-align:center; }
+  header img { width:150px; max-width:55%; height:auto; display:block; margin:0 auto 4px; }
+  header h1 { margin:0 0 6px; font-size:16px; font-weight:800; color:#2b2b2b; }
+  nav { display:flex; gap:4px; }
+  nav button { flex:1; background:none; border:0; color:#6b6b6b; padding:10px 4px 12px; font-size:15px; font-weight:600;
+               border-bottom:3px solid transparent; cursor:pointer; }
+  nav button.on { color:#e3002c; border-bottom-color:#e3002c; }
+  nav .badge { background:var(--red); color:#fff; border-radius:10px; padding:1px 7px; font-size:12px; margin-left:4px; }
+  main { padding:16px; max-width:640px; margin:0 auto; }
+  .card { background:var(--card); border:0; border-left:4px solid #e3002c; box-shadow:0 1px 3px rgba(0,0,0,.06); border-radius:12px; padding:14px; margin-bottom:12px; }
+  label { display:block; font-weight:600; font-size:14px; margin:14px 0 6px; }
+  select, input, textarea { width:100%; font-family:inherit; font-size:16px; padding:12px; border:1px solid #cfd3d8; border-radius:10px; background:#fff; color:var(--ink); }
+  textarea { min-height:80px; resize:vertical; }
+  .row { display:flex; gap:10px; } .row > div { flex:1; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:10px 12px; border:1px solid #cfd3d8; border-radius:20px; background:#fff; font-size:15px; cursor:pointer; user-select:none; }
+  .chip.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .chip.oil { border-width:2px; }
+  .btn { width:100%; padding:15px; font-size:17px; font-weight:700; border:0; border-radius:12px; background:var(--accent); color:#fff; margin-top:18px; cursor:pointer; }
+  .btn:disabled { opacity:.5; }
+  .btn.sec { background:#e5e7eb; color:var(--ink); font-weight:600; padding:12px; font-size:15px; }
+  .hint { border-radius:10px; padding:10px 12px; margin-top:10px; font-size:14px; line-height:1.45; }
+  .lv-red { background:var(--redbg); border-left:5px solid var(--red); }
+  .lv-yellow { background:var(--yelbg); border-left:5px solid var(--yel); }
+  .lv-ok { background:var(--okbg); border-left:5px solid var(--ok); }
+  .lv-unknown { background:#f1f3f4; border-left:5px solid #9aa0a6; }
+  .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+  .d-red { background:var(--red); } .d-yellow { background:var(--yel); } .d-ok { background:var(--ok); } .d-unknown { background:#9aa0a6; }
+  .van { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  .van b { font-size:17px; letter-spacing:.5px; }
+  .mute { color:var(--mute); font-size:13px; }
+  .alert { font-size:14px; margin-top:6px; }
+  .hist { border-top:1px solid var(--line); padding:10px 0; }
+  .hist:first-child { border-top:0; }
+  .tag { display:inline-block; font-size:12px; background:#eef2ff; color:#3730a3; border-radius:6px; padding:2px 6px; margin:2px 4px 2px 0; }
+  .stat { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:15px; }
+  .stat:first-of-type { border-top:0; }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111827; color:#fff; padding:12px 18px;
+           border-radius:10px; font-size:15px; display:none; z-index:20; max-width:90%; }
+  .toast.err { background:var(--red); }
+  .hide { display:none; }
+  .back { background:none; border:0; color:var(--accent); font-size:16px; padding:0 0 12px; cursor:pointer; }
+  .total { font-size:15px; margin-top:8px; color:var(--mute); }
+  .loading { text-align:center; color:var(--mute); padding:40px 0; }
+  .search { margin-bottom:12px; }
+  .lang { position:absolute; top:10px; right:10px; display:flex; gap:4px; }
+  .lang button { border:1px solid #d6d6d6; background:#fff; border-radius:6px; padding:4px 9px; font-weight:700; color:#6b6b6b; cursor:pointer; font-size:13px; }
+  .lang button.on { background:#2b2b2b; color:#fff; border-color:#2b2b2b; }
+</style>
+</head>
+<body>
+<header>
+  <div class="lang"><button type="button" data-l="en">EN</button><button type="button" data-l="pl">PL</button></div>
+  <img src="logo.png" alt="Fast Trans">
+  <h1 data-t="title"></h1>
+  <nav>
+    <button data-tab="add" class="on" data-t="tabAdd"></button>
+    <button data-tab="vans" data-t="tabVans"></button>
+    <button data-tab="due"><span data-t="tabDue"></span> <span id="dueBadge" class="badge hide"></span></button>
+  </nav>
+</header>
+
+<main>
+  <div id="loading" class="loading" data-t="loading"></div>
+
+  <section id="tab-add" class="hide">
+    <div class="card">
+      <label for="fVan" data-t="van"></label>
+      <select id="fVan"></select>
+      <div id="vanHint"></div>
+
+      <label for="fMech" data-t="mech"></label>
+      <select id="fMech"></select>
+      <input id="fMechNew" class="hide" data-tp="mechNewPh" style="margin-top:8px">
+
+      <div class="row">
+        <div><label for="fDate" data-t="date"></label><input id="fDate" type="date"></div>
+        <div><label for="fMiles" data-t="miles"></label><input id="fMiles" inputmode="numeric" data-tp="milesPh"></div>
+      </div>
+
+      <label data-t="done"></label>
+      <div id="fTypes" class="chips"></div>
+
+      <label for="fOpis" data-t="notes"></label>
+      <textarea id="fOpis" data-tp="notesPh"></textarea>
+
+      <div class="row">
+        <div><label for="fParts" data-t="parts"></label><input id="fParts" inputmode="decimal" placeholder="0.00"></div>
+        <div><label for="fLabour" data-t="labour"></label><input id="fLabour" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+      <div id="fTotal" class="total"></div>
+
+      <button id="saveBtn" class="btn" data-t="save"></button>
+    </div>
+  </section>
+
+  <section id="tab-vans" class="hide">
+    <div id="vanList">
+      <input id="vanSearch" class="search" data-tp="searchPh">
+      <div id="vanCards"></div>
+    </div>
+    <div id="vanDetail" class="hide"></div>
+  </section>
+
+  <section id="tab-due" class="hide"><div id="dueList"></div></section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxA9HGd5jr4FTEu6iadLOS0anrm4J8pu2RXWEgvrWa1bY8_sYKBvlMb46SaPNyoj7xEA/exec';
+
+// ================= TŁUMACZENIA / TRANSLATIONS =================
+var T = {
+  pl: {
+    title:'🔧 Serwis vanów', tabAdd:'Dodaj', tabVans:'Pojazdy', tabDue:'Do serwisu', loading:'Wczytywanie…',
+    van:'Pojazd', choose:'— wybierz —', mech:'Mechanik', mechOther:'➕ Nie ma mnie na liście – wpiszę', mechNewPh:'Wpisz imię / warsztat',
+    date:'Data', miles:'Przebieg (mile)', milesPh:'np. 372300', done:'Co zrobione', notes:'Opis / uwagi', notesPh:'np. lewa tylna opona Hankook',
+    parts:'Części £', labour:'Robocizna £', total:'Razem', save:'Zapisz naprawę', saving:'Zapisuję…', saved:'✅ Zapisano – ',
+    searchPh:'Szukaj rejestracji…', noVans:'Brak pojazdów',
+    errVan:'Wybierz pojazd', errMech:'Wybierz albo wpisz mechanika', errType:'Zaznacz co zrobione albo wpisz opis',
+    errMiles:'Podaj przebieg – jest potrzebny do liczenia serwisu', errDate:'Wybierz datę',
+    errNet:'Brak połączenia – spróbuj ponownie', errSetup:'Apka nie jest jeszcze podłączona do arkusza',
+    oil:'Olej', milesSince:' mil od wymiany', milesAgo:' mil temu', at:'przy ', nextOil:'Następna wymiana: ', next:'następna ',
+    noOil:'Brak danych o ostatniej wymianie oleju', noData:'brak danych', oilOf:' / 10 000 mil',
+    back:'‹ Wszystkie pojazdy', mileage:'Przebieg: ', none:'brak', allOk:'Wszystko w porządku',
+    belt:'Pasek alternatora', fuel:'Filtr paliwa', mot:'MOT', est:' (szacowany)', noMot:'brak daty', changeMot:'Zmień MOT', motSaved:'MOT zapisany',
+    addFor:'➕ Dodaj naprawę dla ', repairs:'Naprawy', noEntries:'Brak wpisów', noDate:'bez daty', partsS:'części ', labourS:'robocizna ',
+    red:'PILNE', yellow:'Wkrótce', ok:'OK', unknown:'Brak danych', nothingDue:'✅ Nic nie wymaga serwisu', mi:' mil'
+  },
+  en: {
+    title:'🔧 Van service', tabAdd:'Add', tabVans:'Vans', tabDue:'Service due', loading:'Loading…',
+    van:'Vehicle', choose:'— choose —', mech:'Mechanic', mechOther:'➕ Not on the list – type my name', mechNewPh:'Your name / garage',
+    date:'Date', miles:'Mileage', milesPh:'e.g. 372300', done:'Work done', notes:'Description / notes', notesPh:'e.g. rear left tyre Hankook',
+    parts:'Parts £', labour:'Labour £', total:'Total', save:'Save repair', saving:'Saving…', saved:'✅ Saved – ',
+    searchPh:'Search registration…', noVans:'No vehicles',
+    errVan:'Choose a vehicle', errMech:'Choose or type the mechanic', errType:'Tick the work done or add a description',
+    errMiles:'Enter the mileage – it is needed for service intervals', errDate:'Choose a date',
+    errNet:'No connection – please try again', errSetup:'The app is not connected to the sheet yet',
+    oil:'Oil', milesSince:' miles since change', milesAgo:' miles ago', at:'at ', nextOil:'Next change: ', next:'next ',
+    noOil:'No record of the last oil change', noData:'no data', oilOf:' / 10,000 miles',
+    back:'‹ All vans', mileage:'Mileage: ', none:'none', allOk:'All good',
+    belt:'Alternator belt', fuel:'Fuel filter', mot:'MOT', est:' (estimated)', noMot:'no date', changeMot:'Change MOT', motSaved:'MOT saved',
+    addFor:'➕ Add repair for ', repairs:'Repairs', noEntries:'No entries', noDate:'no date', partsS:'parts ', labourS:'labour ',
+    red:'URGENT', yellow:'Soon', ok:'OK', unknown:'No data', nothingDue:'✅ Nothing needs servicing', mi:' miles'
+  }
+};
+var TYPE_EN = {
+  'Olej + filtry (oleju i powietrza)':'Oil + filters (oil & air)', 'Olej bez filtrów':'Oil without filters',
+  'Pasek alternatora':'Alternator belt', 'Filtr paliwa':'Fuel filter', 'MOT':'MOT',
+  'Klocki przód':'Front brake pads', 'Klocki tył':'Rear brake pads', 'Tarcze przód':'Front discs', 'Tarcze tył':'Rear discs',
+  'Zaciski':'Calipers', 'Opony':'Tyres', 'Zbieżność':'Wheel alignment', 'Sprzęgło':'Clutch', 'Inne':'Other',
+  'Olej (import – filtry nieznane)':'Oil (imported – filters unknown)', 'Klocki':'Brake pads', 'Tarcze':'Brake discs'
+};
+var NEXT_EN = { 'Z FILTRAMI':'WITH FILTERS', 'bez filtrów':'without filters', '? (sprawdź)':'? (check)' };
+var ALERT_EN = [
+  [/^Olej: brak danych o ostatniej wymianie$/, 'Oil: no record of the last change'],
+  [/^Olej (Z FILTRAMI|bez filtrów|\? \(sprawdź\)): (.+) mil od wymiany( – PO TERMINIE)?$/, function(m,a,b,c){ return 'Oil ' + NEXT_EN[a] + ': ' + b + ' miles since change' + (c ? ' – OVERDUE' : ''); }],
+  [/^Filtr paliwa: (.+) mil od wymiany$/, 'Fuel filter: $1 miles since change'],
+  [/^Pasek alternatora: (.+) mil od wymiany$/, 'Alternator belt: $1 miles since change'],
+  [/^Pasek alternatora: do wymiany przed MOT$/, 'Alternator belt: replace before MOT'],
+  [/^MOT po terminie \((.+?)\)/, 'MOT overdue ($1)'],
+  [/^MOT za (\d+) dni \((.+?)\)/, 'MOT in $1 days ($2)'],
+  [/ – data szacowana, sprawdź$/, ' – estimated date, check'],
+  [/ – data szacowana$/, ' – estimated date'],
+  [/^Brak aktualnego przebiegu z apki kierowców$/, 'No current mileage from the drivers’ app']
+];
+var ERR_EN = {
+  'Wybierz pojazd':'errVan', 'Wybierz albo wpisz mechanika':'errMech', 'Zaznacz rodzaj naprawy albo wpisz opis':'errType',
+  'Podaj przebieg – jest potrzebny do liczenia serwisu':'errMiles', 'Zła data':'errDate'
+};
+
+var LANG = 'pl';
+try { LANG = localStorage.getItem('lang') || ((navigator.language || '').toLowerCase().indexOf('pl') === 0 ? 'pl' : 'en'); } catch(e){}
+function t(k){ return (T[LANG] && T[LANG][k]) || T.pl[k] || k; }
+function tType(n){ return LANG === 'en' && TYPE_EN[n] ? TYPE_EN[n] : n; }
+function tNext(n){ return LANG === 'en' && NEXT_EN[n] ? NEXT_EN[n] : n; }
+function tAlert(s){ if (LANG !== 'en') return s; ALERT_EN.forEach(function(r){ s = s.replace(r[0], r[1]); }); return s; }
+function tErr(msg){ return ERR_EN[msg] ? t(ERR_EN[msg]) : msg; }
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('.lang button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-l') === LANG); });
+  document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = t(el.getAttribute('data-t')); });
+  document.querySelectorAll('[data-tp]').forEach(function(el){ el.placeholder = t(el.getAttribute('data-tp')); });
+  if (DATA){
+    renderForm(); renderVans(); renderDue(); updTotal();
+    if (!$('vanDetail').classList.contains('hide') && CUR_VAN) openVan(CUR_VAN, true);
+  }
+}
+document.querySelectorAll('.lang button').forEach(function(b){
+  b.onclick = function(){ LANG = b.getAttribute('data-l'); try { localStorage.setItem('lang', LANG); } catch(e){} applyLang(); };
+});
+
+// ================= POŁĄCZENIE Z ARKUSZEM =================
+function api(fn, args){
+  if (SCRIPT_URL.indexOf('https://') !== 0) return Promise.reject(new Error(t('errSetup')));
+  var req;
+  if (fn === 'getData') req = fetch(SCRIPT_URL + '?a=data');
+  else if (fn === 'getHistory') req = fetch(SCRIPT_URL + '?a=history&reg=' + encodeURIComponent(args[0]));
+  else {
+    var body = fn === 'saveRepair' ? { a:'save', f:args[0] } : { a:'mot', reg:args[0], date:args[1] };
+    req = fetch(SCRIPT_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:JSON.stringify(body) });
+  }
+  return req.then(function(r){ return r.json(); }, function(){ throw new Error(t('errNet')); })
+    .then(function(j){ if (!j.ok) throw new Error(tErr(j.error || 'Error')); return j.data; });
+}
+
+// ================= APKA =================
+var DATA = null, selTypes = [], CUR_VAN = null;
+var OTHER = '__other__';
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function num(n){ return n == null ? '?' : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, LANG === 'en' ? ',' : ' '); }
+function money(n){ return n == null || n === '' ? '' : '£' + Number(n).toFixed(2); }
+function toast(msg, err){ var x=$('toast'); x.textContent=msg; x.className='toast'+(err?' err':''); x.style.display='block'; clearTimeout(x._t); x._t=setTimeout(function(){ x.style.display='none'; }, err?5000:2500); }
+function isoToday(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+function findVan(reg){ return DATA.vans.filter(function(v){ return v.reg===reg; })[0]; }
+
+document.querySelectorAll('nav button').forEach(function(b){ b.onclick = function(){ showTab(b.getAttribute('data-tab')); }; });
+function showTab(x){
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===x); });
+  ['add','vans','due'].forEach(function(k){ $('tab-'+k).classList.toggle('hide', k!==x); });
+  if (x==='vans'){ $('vanDetail').classList.add('hide'); $('vanList').classList.remove('hide'); CUR_VAN = null; }
+  window.scrollTo(0,0);
+}
+
+function load(cb){
+  api('getData').then(function(d){
+    DATA = d;
+    $('loading').classList.add('hide');
+    renderForm(); renderVans(); renderDue();
+    if (!document.querySelector('section:not(.hide)')) showTab('add');
+    if (cb) cb();
+  }, function(e){ $('loading').textContent = e.message; });
+}
+
+// ---------- formularz ----------
+function renderForm(){
+  var sel = $('fVan'), keep = sel.value;
+  sel.innerHTML = '<option value="">'+t('choose')+'</option>' + DATA.vans.slice().sort(function(a,b){ return a.reg.localeCompare(b.reg); })
+    .map(function(v){ var icon = v.level==='red'?'🔴 ':v.level==='yellow'?'🟡 ':''; return '<option value="'+v.reg+'">'+icon+v.reg+'</option>'; }).join('');
+  sel.value = keep;
+
+  var m = $('fMech'), keepM = m.value;
+  m.innerHTML = '<option value="">'+t('choose')+'</option>' + DATA.mechanics.map(function(x){ return '<option>'+esc(x)+'</option>'; }).join('') +
+    '<option value="'+OTHER+'">'+t('mechOther')+'</option>';
+  try { var last = localStorage.getItem('mech'); if (!keepM && last && DATA.mechanics.indexOf(last)>=0) keepM = last; } catch(e){}
+  m.value = keepM || '';
+
+  if (!$('fDate').value) $('fDate').value = isoToday();
+
+  $('fTypes').innerHTML = DATA.types.map(function(x){
+    var oil = /^OLEJ/.test(x.cat) ? ' oil' : '';
+    return '<span class="chip'+oil+(selTypes.indexOf(x.name)>=0?' on':'')+'" data-n="'+esc(x.name)+'">'+esc(tType(x.name))+'</span>';
+  }).join('');
+  document.querySelectorAll('#fTypes .chip').forEach(function(c){
+    c.onclick = function(){
+      var n = c.getAttribute('data-n'), i = selTypes.indexOf(n);
+      if (i>=0) selTypes.splice(i,1);
+      else {
+        if (/^Olej/.test(n)) selTypes = selTypes.filter(function(x){ return !/^Olej/.test(x); });
+        selTypes.push(n);
+      }
+      renderForm();
+    };
+  });
+  vanHint();
+}
+
+$('fVan').onchange = function(){ var v = findVan($('fVan').value); $('fMiles').value = v && v.current ? v.current : ''; vanHint(); };
+$('fMech').onchange = function(){ $('fMechNew').classList.toggle('hide', $('fMech').value!==OTHER); if ($('fMech').value===OTHER) $('fMechNew').focus(); };
+['fParts','fLabour'].forEach(function(id){ $(id).oninput = updTotal; });
+function updTotal(){
+  var p = parseFloat(String($('fParts').value).replace(',','.'))||0, l = parseFloat(String($('fLabour').value).replace(',','.'))||0;
+  $('fTotal').textContent = (p||l) ? t('total') + ': £' + (p+l).toFixed(2) : '';
+}
+
+function vanHint(){
+  var v = DATA && findVan($('fVan').value), box = $('vanHint');
+  if (!v){ box.innerHTML=''; return; }
+  var h = '';
+  if (v.oil && v.oil.lastMiles){
+    h += '<div class="hint lv-'+v.oil.level+'"><b>'+t('oil')+':</b> '+(v.oil.since!=null? num(v.oil.since)+t('milesSince') : t('at')+num(v.oil.lastMiles))+
+         '<br>'+t('nextOil')+'<b>'+esc(tNext(v.oil.nextTxt))+'</b></div>';
+  } else h += '<div class="hint lv-unknown">'+t('noOil')+'</div>';
+  v.alerts.filter(function(a){ return !/^Olej/.test(a.text); }).forEach(function(a){ h += '<div class="hint lv-'+a.level+'">'+esc(tAlert(a.text))+'</div>'; });
+  box.innerHTML = h;
+}
+
+$('saveBtn').onclick = function(){
+  var mech = $('fMech').value===OTHER ? $('fMechNew').value.trim() : $('fMech').value;
+  var f = { reg:$('fVan').value, mech:mech, date:$('fDate').value, miles:$('fMiles').value,
+            types:selTypes.slice(), opis:$('fOpis').value, parts:$('fParts').value, labour:$('fLabour').value };
+  if (!f.reg) return toast(t('errVan'), true);
+  if (!f.mech) return toast(t('errMech'), true);
+  if (!f.types.length && !f.opis.trim()) return toast(t('errType'), true);
+  var btn = $('saveBtn'); btn.disabled = true; btn.textContent = t('saving');
+  api('saveRepair', [f]).then(function(){
+    try { localStorage.setItem('mech', f.mech); } catch(e){}
+    selTypes = []; $('fOpis').value=''; $('fParts').value=''; $('fLabour').value=''; $('fTotal').textContent='';
+    $('fMechNew').value=''; $('fMechNew').classList.add('hide');
+    btn.disabled = false; btn.textContent = t('save');
+    toast(t('saved') + f.reg);
+    load();
+  }, function(e){ btn.disabled = false; btn.textContent = t('save'); toast(e.message, true); });
+};
+
+// ---------- pojazdy ----------
+function renderVans(){
+  var q = $('vanSearch').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var list = DATA.vans.filter(function(v){ return !q || v.reg.indexOf(q)>=0; });
+  $('vanCards').innerHTML = list.map(function(v){
+    var oil = t('oil') + ': ' + (v.oil && v.oil.since!=null ? num(v.oil.since)+t('oilOf') : t('noData'));
+    return '<div class="card van" data-reg="'+v.reg+'"><div><span class="dot d-'+v.level+'"></span><b>'+v.reg+'</b>'+
+      '<div class="mute">'+oil+(v.mot?' · MOT '+v.mot:'')+'</div></div><div class="mute">›</div></div>';
+  }).join('') || '<div class="mute">'+t('noVans')+'</div>';
+  document.querySelectorAll('#vanCards .van').forEach(function(c){ c.onclick = function(){ openVan(c.getAttribute('data-reg')); }; });
+}
+$('vanSearch').oninput = renderVans;
+
+function stat(label, val, lv){ return '<div class="stat"><span><span class="dot d-'+lv+'"></span>'+label+'</span><span class="mute" style="text-align:right">'+esc(val)+'</span></div>'; }
+
+function openVan(reg, keepScroll){
+  if (!keepScroll) showTab('vans');
+  CUR_VAN = reg;
+  var v = findVan(reg); if (!v) return;
+  $('vanList').classList.add('hide');
+  var d = $('vanDetail'); d.classList.remove('hide');
+  var s = '<button class="back" id="backBtn">'+t('back')+'</button>';
+  s += '<div class="card"><div style="font-size:22px;font-weight:800;letter-spacing:1px"><span class="dot d-'+v.level+'"></span>'+v.reg+'</div>';
+  s += '<div class="mute" style="margin-top:4px">'+t('mileage')+(v.current?num(v.current)+t('mi'):t('none'))+(v.currentDate?' ('+v.currentDate+')':'')+'</div>';
+  v.alerts.forEach(function(a){ s += '<div class="hint lv-'+a.level+'">'+esc(tAlert(a.text))+'</div>'; });
+  if (!v.alerts.length) s += '<div class="hint lv-ok">'+t('allOk')+'</div>';
+  s += '</div><div class="card">';
+  s += stat(t('oil'), v.oil && v.oil.lastMiles ? (v.oil.since!=null?num(v.oil.since)+t('milesAgo'):t('at')+num(v.oil.lastMiles)) + ' · '+t('next')+tNext(v.oil.nextTxt) : t('noData'), v.oil?v.oil.level:'unknown');
+  s += stat(t('belt'), v.belt && (v.belt.lastDate||v.belt.lastMiles) ? (v.belt.lastDate||'') + (v.belt.since!=null?' · '+num(v.belt.since)+t('milesAgo'):'') : t('noData'), v.belt?v.belt.level:'unknown');
+  s += stat(t('fuel'), v.fuel && v.fuel.lastMiles ? (v.fuel.since!=null?num(v.fuel.since)+t('milesAgo'):t('at')+num(v.fuel.lastMiles)) : t('noData'), v.fuel?v.fuel.level:'unknown');
+  s += stat(t('mot'), v.mot ? v.mot + (v.motEst?t('est'):'') : t('noMot'), v.daysToMot!=null && v.daysToMot<=21 ? (v.daysToMot<=7?'red':'yellow') : (v.mot?'ok':'unknown'));
+  s += '<div class="row" style="margin-top:10px"><div><input type="date" id="motIn" value="'+(v.motIso||'')+'"></div>'+
+       '<div style="flex:0 0 auto"><button class="btn sec" style="margin:0" id="motBtn">'+t('changeMot')+'</button></div></div>';
+  s += '</div>';
+  s += '<button class="btn" id="addForVan" style="margin:0 0 12px">'+t('addFor')+v.reg+'</button>';
+  s += '<div class="card"><div style="font-weight:700;margin-bottom:6px">'+t('repairs')+'</div><div id="histBox" class="mute">'+t('loading')+'</div></div>';
+  d.innerHTML = s;
+
+  $('backBtn').onclick = function(){ d.classList.add('hide'); $('vanList').classList.remove('hide'); CUR_VAN = null; };
+  $('addForVan').onclick = function(){ $('fVan').value = reg; $('fVan').onchange(); showTab('add'); };
+  $('motBtn').onclick = function(){
+    var val = $('motIn').value; if (!val) return toast(t('errDate'), true);
+    api('setMot', [reg, val]).then(function(){ toast(t('motSaved')); load(function(){ openVan(reg, true); }); }, function(e){ toast(e.message, true); });
+  };
+  api('getHistory', [reg]).then(function(h){
+    if (CUR_VAN !== reg) return;
+    $('histBox').innerHTML = h.length ? h.map(function(e){
+      var cost = e.total ? money(e.total) + (e.parts||e.labour ? ' <span class="mute">('+t('partsS')+money(e.parts||0)+', '+t('labourS')+money(e.labour||0)+')</span>' : '') : '';
+      return '<div class="hist"><div><b>'+(e.date||t('noDate'))+'</b>'+(e.miles?' · '+num(e.miles)+t('mi'):'')+(e.mech?' · '+esc(e.mech):'')+'</div>'+
+        '<div>'+e.types.map(function(x){ return '<span class="tag">'+esc(tType(x))+'</span>'; }).join('')+'</div>'+
+        (e.opis?'<div style="font-size:14px;margin-top:2px">'+esc(e.opis)+'</div>':'')+
+        (cost?'<div style="font-size:14px;margin-top:2px">'+cost+'</div>':'')+'</div>';
+    }).join('') : t('noEntries');
+  }, function(e){ if ($('histBox')) $('histBox').textContent = e.message; });
+}
+
+// ---------- do serwisu ----------
+function renderDue(){
+  var due = DATA.vans.filter(function(v){ return v.level==='red' || v.level==='yellow'; });
+  var b = $('dueBadge'); b.textContent = due.length; b.classList.toggle('hide', !due.length);
+  $('dueList').innerHTML = due.length ? due.map(function(v){
+    return '<div class="card van" data-reg="'+v.reg+'" style="display:block"><div><span class="dot d-'+v.level+'"></span><b>'+v.reg+'</b>'+
+      ' <span class="mute">'+t(v.level)+(v.current?' · '+num(v.current)+t('mi'):'')+'</span></div>'+
+      v.alerts.filter(function(a){ return a.level==='red'||a.level==='yellow'; }).map(function(a){ return '<div class="alert">'+(a.level==='red'?'🔴 ':'🟡 ')+esc(tAlert(a.text))+'</div>'; }).join('')+'</div>';
+  }).join('') : '<div class="card lv-ok">'+t('nothingDue')+'</div>';
+  document.querySelectorAll('#dueList .van').forEach(function(c){ c.onclick = function(){ openVan(c.getAttribute('data-reg')); }; });
+}
+
+applyLang();
+load();
+</script>
+</body>
+</html>
